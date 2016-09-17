@@ -3492,7 +3492,7 @@
 	        progress: { value: 0.0 }
 	    },
 	    vertexShader: '\n        varying vec2 vUv;\n        \n        void main() {\n            vUv = uv;\n            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n        }\n    ',
-	    fragmentShader: '\n        uniform sampler2D map;\n        uniform float progress;\n\n        varying vec2 vUv;\n        \n        void main() {\n            vec4 sum = texture2D(map, vUv);\n            sum.x += progress;\n            gl_FragColor = vec4(sum.xyz, 1.0);\n        }\n    '
+	    fragmentShader: '\n        uniform sampler2D map;\n        uniform float progress;\n\n        varying vec2 vUv;\n        \n        const float radius = 0.5;\n        const float softness = 0.5;\n\n        void main() {\n            vec4 tex = texture2D(map, vUv);\n\n            // vignette\n            vec2 position = vUv - vec2(0.5);\n            float len = length(position);\n            float vignette = 1.0 - smoothstep(radius, radius - softness, len);\n            vec3 overlay = vec3(1, 0, 0);\n\n            tex.rgb = mix(tex.rgb, overlay, progress * vignette);\n\n            gl_FragColor = vec4(tex.rgb, 1.0);\n        }\n    '
 	};
 
 /***/ }
