@@ -5,15 +5,12 @@ const canvas2d = document.getElementById('canvas2d')
 
 export default class Renderer {
     constructor(canvas, container, stream) {
+        this._container = container
         this._stream = stream
         this._clock = new THREE.Clock()
         this._last = 0
         this._canvas2d = this._createCanvas(stream)
         this._ctx = this._canvas2d.getContext('2d')
- 
-        setInterval(() => {
-            this._last = this._clock.getElapsedTime()
-        }, 1000)
 
         this._scene = new THREE.Scene()
 
@@ -21,6 +18,12 @@ export default class Renderer {
         this._initCamera()
         this._initMaterials()
         this._initGeometry()
+
+        window.addEventListener('resize', () => this._onResize(), false)
+
+        setInterval(() => {
+            this._last = this._clock.getElapsedTime()
+        }, 1000)
 
         this._animate()
     }
@@ -34,7 +37,8 @@ export default class Renderer {
 
     _initRenderer(canvas) {
         this._renderer = new THREE.WebGLRenderer({ canvas: canvas })
-        this._renderer.setClearColor(0xffff00)
+        this._renderer.setClearColor(0xff00ff)
+        this._onResize()
     }
 
     _initCamera(){
@@ -62,6 +66,10 @@ export default class Renderer {
         this._right = new THREE.Mesh(geometry, this._material)
         this._right.position.setX(0.5)
         this._scene.add(this._right)
+    }
+
+    _onResize(){
+        this._renderer.setSize(this._container.clientWidth, this._container.clientHeight);
     }
 
     _animate() {

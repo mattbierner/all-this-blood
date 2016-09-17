@@ -52,12 +52,10 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	var canvas3d = document.getElementById('canvas3d');
-
 	var img = new Image();
 	img.crossOrigin = 'anonymous';
 	img.onload = function () {
-	    new _renderer2.default(canvas3d, null, img);
+	    new _renderer2.default(document.getElementById('canvas3d'), document.getElementById('main'), img);
 	};
 
 	img.src = 'http://192.168.1.6:8080';
@@ -3381,15 +3379,12 @@
 
 	        _classCallCheck(this, Renderer);
 
+	        this._container = container;
 	        this._stream = stream;
 	        this._clock = new _three2.default.Clock();
 	        this._last = 0;
 	        this._canvas2d = this._createCanvas(stream);
 	        this._ctx = this._canvas2d.getContext('2d');
-
-	        setInterval(function () {
-	            _this._last = _this._clock.getElapsedTime();
-	        }, 1000);
 
 	        this._scene = new _three2.default.Scene();
 
@@ -3397,6 +3392,14 @@
 	        this._initCamera();
 	        this._initMaterials();
 	        this._initGeometry();
+
+	        window.addEventListener('resize', function () {
+	            return _this._onResize();
+	        }, false);
+
+	        setInterval(function () {
+	            _this._last = _this._clock.getElapsedTime();
+	        }, 1000);
 
 	        this._animate();
 	    }
@@ -3413,7 +3416,8 @@
 	        key: '_initRenderer',
 	        value: function _initRenderer(canvas) {
 	            this._renderer = new _three2.default.WebGLRenderer({ canvas: canvas });
-	            this._renderer.setClearColor(0xffff00);
+	            this._renderer.setClearColor(0xff00ff);
+	            this._onResize();
 	        }
 	    }, {
 	        key: '_initCamera',
@@ -3444,6 +3448,11 @@
 	            this._right = new _three2.default.Mesh(geometry, this._material);
 	            this._right.position.setX(0.5);
 	            this._scene.add(this._right);
+	        }
+	    }, {
+	        key: '_onResize',
+	        value: function _onResize() {
+	            this._renderer.setSize(this._container.clientWidth, this._container.clientHeight);
 	        }
 	    }, {
 	        key: '_animate',
