@@ -19,8 +19,12 @@ export default class Renderer {
             this._last = this._clock.getElapsedTime()
         }, 1000)
 
+        this._scene = new THREE.Scene()
+
         this._initRenderer(canvas)
-        this._init()
+        this._initCamera()
+        this._initGeometry()
+
         this._animate()
     }
 
@@ -29,17 +33,23 @@ export default class Renderer {
         this._renderer.setClearColor(0xffff00)
     }
 
-    _init(){
-        this._scene = new THREE.Scene()
-
+    _initCamera(){
         this._camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 1000)
         this._camera.position.set(0, 0, 5)
         this._scene.add(this._camera)
+    }
 
+    _initGeometry() {
+        // Poor mans webvr :)
         const geometry = new THREE.PlaneGeometry(1, 2);
-        const mesh = new THREE.Mesh(geometry, material)
-        mesh.position.setX(-0.5)
-        this._scene.add(mesh)
+        
+        this._left = new THREE.Mesh(geometry, material)
+        this._left.position.setX(-0.5)
+        this._scene.add(this._left)
+
+        this._right = new THREE.Mesh(geometry, material)
+        this._right.position.setX(0.5)
+        this._scene.add(this._right)
     }
 
     _animate() {

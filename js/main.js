@@ -3394,8 +3394,12 @@
 	            _this._last = _this._clock.getElapsedTime();
 	        }, 1000);
 
+	        this._scene = new _three2.default.Scene();
+
 	        this._initRenderer(canvas);
-	        this._init();
+	        this._initCamera();
+	        this._initGeometry();
+
 	        this._animate();
 	    }
 
@@ -3406,18 +3410,25 @@
 	            this._renderer.setClearColor(0xffff00);
 	        }
 	    }, {
-	        key: '_init',
-	        value: function _init() {
-	            this._scene = new _three2.default.Scene();
-
+	        key: '_initCamera',
+	        value: function _initCamera() {
 	            this._camera = new _three2.default.OrthographicCamera(-1, 1, 1, -1, 1, 1000);
 	            this._camera.position.set(0, 0, 5);
 	            this._scene.add(this._camera);
-
+	        }
+	    }, {
+	        key: '_initGeometry',
+	        value: function _initGeometry() {
+	            // Poor mans webvr :)
 	            var geometry = new _three2.default.PlaneGeometry(1, 2);
-	            var mesh = new _three2.default.Mesh(geometry, material);
-	            mesh.position.setX(-0.5);
-	            this._scene.add(mesh);
+
+	            this._left = new _three2.default.Mesh(geometry, material);
+	            this._left.position.setX(-0.5);
+	            this._scene.add(this._left);
+
+	            this._right = new _three2.default.Mesh(geometry, material);
+	            this._right.position.setX(0.5);
+	            this._scene.add(this._right);
 	        }
 	    }, {
 	        key: '_animate',
