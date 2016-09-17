@@ -33,9 +33,7 @@ export default {
             vec2 position = vUv - vec2(0.5);
             float len = length(position);
             float vignette = 1.0 - smoothstep(radius, radius - softness, len);
-            vec3 overlay = vec3(1, 0, 0);
-
-            tex.rgb = mix(tex.rgb, overlay, progress * vignette);
+            tex.rgb = mix(tex.rgb, vec3(1, 0, 0), progress * vignette);
 
             gl_FragColor = vec4(tex.rgb, 1.0);
         }

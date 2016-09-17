@@ -56,10 +56,11 @@
 
 	var img = new Image();
 	img.crossOrigin = 'anonymous';
-	img.src = 'http://192.168.1.6:8080';
 	img.onload = function () {
 	    new _renderer2.default(canvas3d, null, img);
 	};
+
+	img.src = 'http://192.168.1.6:8080';
 
 /***/ },
 /* 1 */
@@ -3373,12 +3374,6 @@
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var canvas2d = document.getElementById('canvas2d');
-	var ctx = canvas2d.getContext('2d');
-	var map = new _three2.default.Texture(canvas2d);
-
-	var material = new _three2.default.ShaderMaterial(_pulse_shader2.default);
-	material.uniforms.map.value = map;
-	material.uniforms.map.needsUpdate = true;
 
 	var Renderer = function () {
 	    function Renderer(canvas, container, stream) {
@@ -3389,6 +3384,8 @@
 	        this._stream = stream;
 	        this._clock = new _three2.default.Clock();
 	        this._last = 0;
+	        this._canvas2d = this._createCanvas(stream);
+	        this._ctx = this._canvas2d.getContext('2d');
 
 	        setInterval(function () {
 	            _this._last = _this._clock.getElapsedTime();
@@ -3398,12 +3395,21 @@
 
 	        this._initRenderer(canvas);
 	        this._initCamera();
+	        this._initMaterials();
 	        this._initGeometry();
 
 	        this._animate();
 	    }
 
 	    _createClass(Renderer, [{
+	        key: '_createCanvas',
+	        value: function _createCanvas(img) {
+	            var canvas = document.createElement('canvas');
+	            canvas.width = 512;
+	            canvas.height = 512; //img.height
+	            return canvas;
+	        }
+	    }, {
 	        key: '_initRenderer',
 	        value: function _initRenderer(canvas) {
 	            this._renderer = new _three2.default.WebGLRenderer({ canvas: canvas });
@@ -3417,16 +3423,25 @@
 	            this._scene.add(this._camera);
 	        }
 	    }, {
+	        key: '_initMaterials',
+	        value: function _initMaterials() {
+	            this._map = new _three2.default.Texture(this._canvas2d);
+
+	            this._material = new _three2.default.ShaderMaterial(_pulse_shader2.default);
+	            this._material.uniforms.map.value = this._map;
+	            this._material.uniforms.map.needsUpdate = true;
+	        }
+	    }, {
 	        key: '_initGeometry',
 	        value: function _initGeometry() {
 	            // Poor mans webvr :)
 	            var geometry = new _three2.default.PlaneGeometry(1, 2);
 
-	            this._left = new _three2.default.Mesh(geometry, material);
+	            this._left = new _three2.default.Mesh(geometry, this._material);
 	            this._left.position.setX(-0.5);
 	            this._scene.add(this._left);
 
-	            this._right = new _three2.default.Mesh(geometry, material);
+	            this._right = new _three2.default.Mesh(geometry, this._material);
 	            this._right.position.setX(0.5);
 	            this._scene.add(this._right);
 	        }
@@ -3443,14 +3458,14 @@
 	            });
 
 	            // Update image
-	            ctx.drawImage(this._stream, 0, 0, canvas2d.clientWidth, canvas2d.clientHeight);
-	            map.needsUpdate = true;
-	            material.needsUpdate = true;
+	            this._ctx.drawImage(this._stream, 0, 0, this._canvas2d.width, this._canvas2d.height);
+	            this._map.needsUpdate = true;
+	            this._material.needsUpdate = true;
 
 	            var val = (0.5 - (start - this._last)) / 0.5;
 	            var progress = Math.min(Math.max(val, 0), 1);
-	            material.uniforms.progress.value = progress;
-	            material.uniforms.progress.needsUpdate = true;
+	            this._material.uniforms.progress.value = progress;
+	            this._material.uniforms.progress.needsUpdate = true;
 
 	            this._render();
 	        }
@@ -3492,7 +3507,7 @@
 	        progress: { value: 0.0 }
 	    },
 	    vertexShader: '\n        varying vec2 vUv;\n        \n        void main() {\n            vUv = uv;\n            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n        }\n    ',
-	    fragmentShader: '\n        uniform sampler2D map;\n        uniform float progress;\n\n        varying vec2 vUv;\n        \n        const float radius = 0.5;\n        const float softness = 0.5;\n\n        void main() {\n            vec4 tex = texture2D(map, vUv);\n\n            // vignette\n            vec2 position = vUv - vec2(0.5);\n            float len = length(position);\n            float vignette = 1.0 - smoothstep(radius, radius - softness, len);\n            vec3 overlay = vec3(1, 0, 0);\n\n            tex.rgb = mix(tex.rgb, overlay, progress * vignette);\n\n            gl_FragColor = vec4(tex.rgb, 1.0);\n        }\n    '
+	    fragmentShader: '\n        uniform sampler2D map;\n        uniform float progress;\n\n        varying vec2 vUv;\n        \n        const float radius = 0.5;\n        const float softness = 0.5;\n\n        void main() {\n            vec4 tex = texture2D(map, vUv);\n\n            // vignette\n            vec2 position = vUv - vec2(0.5);\n            float len = length(position);\n            float vignette = 1.0 - smoothstep(radius, radius - softness, len);\n            tex.rgb = mix(tex.rgb, vec3(1, 0, 0), progress * vignette);\n\n            gl_FragColor = vec4(tex.rgb, 1.0);\n        }\n    '
 	};
 
 /***/ }
