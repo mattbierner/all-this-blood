@@ -46,7 +46,7 @@
 
 	'use strict';
 
-	var _renderer = __webpack_require__(2);
+	var _renderer = __webpack_require__(1);
 
 	var _renderer2 = _interopRequireDefault(_renderer);
 
@@ -62,6 +62,156 @@
 
 /***/ },
 /* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _three = __webpack_require__(2);
+
+	var _three2 = _interopRequireDefault(_three);
+
+	var _beat_show = __webpack_require__(3);
+
+	var _beat_show2 = _interopRequireDefault(_beat_show);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	var canvas2d = document.getElementById('canvas2d');
+
+	var nearestPowerOfTwo = function nearestPowerOfTwo(dim) {
+	    var power = 2;
+	    while (dim >>= 1) {
+	        power <<= 1;
+	    }return power;
+	};
+
+	var Renderer = function () {
+	    function Renderer(canvas, container, stream) {
+	        var _this = this;
+
+	        _classCallCheck(this, Renderer);
+
+	        this._container = container;
+	        this._stream = stream;
+	        this._clock = new _three2.default.Clock();
+	        this._last = 0;
+	        this._canvas2d = this._createCanvas(stream);
+	        this._ctx = this._canvas2d.getContext('2d');
+
+	        this._scene = new _three2.default.Scene();
+
+	        this._initRenderer(canvas);
+	        this._initCamera();
+	        this._initMaterials();
+	        this._initGeometry();
+
+	        window.addEventListener('resize', function () {
+	            return _this._onResize();
+	        }, false);
+
+	        setInterval(function () {
+	            _this._last = _this._clock.getElapsedTime();
+	        }, 1000);
+
+	        this._animate();
+	    }
+
+	    _createClass(Renderer, [{
+	        key: '_createCanvas',
+	        value: function _createCanvas(img) {
+	            var canvas = document.createElement('canvas');
+	            canvas.width = nearestPowerOfTwo(img.width);
+	            canvas.height = nearestPowerOfTwo(img.height);
+	            return canvas;
+	        }
+	    }, {
+	        key: '_initRenderer',
+	        value: function _initRenderer(canvas) {
+	            this._renderer = new _three2.default.WebGLRenderer({ canvas: canvas });
+	            this._renderer.setClearColor(0xff00ff);
+	            this._onResize();
+	        }
+	    }, {
+	        key: '_initCamera',
+	        value: function _initCamera() {
+	            this._camera = new _three2.default.OrthographicCamera(-1, 1, 1, -1, 1, 1000);
+	            this._camera.position.set(0, 0, 5);
+	            this._scene.add(this._camera);
+	        }
+	    }, {
+	        key: '_initMaterials',
+	        value: function _initMaterials() {
+	            this._map = new _three2.default.Texture(this._canvas2d);
+
+	            this._material = new _three2.default.ShaderMaterial(_beat_show2.default);
+	            this._material.uniforms.map.value = this._map;
+	            this._material.uniforms.map.needsUpdate = true;
+	        }
+	    }, {
+	        key: '_initGeometry',
+	        value: function _initGeometry() {
+	            // Poor mans webvr :)
+	            var geometry = new _three2.default.PlaneGeometry(1, 2);
+
+	            this._left = new _three2.default.Mesh(geometry, this._material);
+	            this._left.position.setX(-0.5);
+	            this._scene.add(this._left);
+
+	            this._right = new _three2.default.Mesh(geometry, this._material);
+	            this._right.position.setX(0.5);
+	            this._scene.add(this._right);
+	        }
+	    }, {
+	        key: '_onResize',
+	        value: function _onResize() {
+	            this._renderer.setSize(this._container.clientWidth, this._container.clientHeight);
+	        }
+	    }, {
+	        key: '_animate',
+	        value: function _animate() {
+	            var _this2 = this;
+
+	            var start = this._clock.getElapsedTime();
+	            var delta = this._clock.getDelta();
+
+	            requestAnimationFrame(function () {
+	                return _this2._animate();
+	            });
+
+	            // Update image
+	            this._ctx.drawImage(this._stream, 0, 0, this._canvas2d.width, this._canvas2d.height);
+	            this._map.needsUpdate = true;
+	            this._material.needsUpdate = true;
+
+	            var val = (1 - (start - this._last)) / 1;
+	            var progress = Math.min(Math.max(val, 0), 1);
+	            this._material.uniforms.progress.value = progress;
+	            this._material.uniforms.progress.needsUpdate = true;
+
+	            this._render();
+	        }
+	    }, {
+	        key: '_render',
+	        value: function _render() {
+	            this._renderer.render(this._scene, this._camera);
+	        }
+	    }]);
+
+	    return Renderer;
+	}();
+
+	exports.default = Renderer;
+
+/***/ },
+/* 2 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_FACTORY__, __WEBPACK_AMD_DEFINE_RESULT__;'use strict';// File:src/Three.js
@@ -3348,7 +3498,7 @@
 	var numFrames=this.geometry.morphTargets.length;var name="__default";var startFrame=0;var endFrame=numFrames-1;var fps=numFrames/1;this.createAnimation(name,startFrame,endFrame,fps);this.setAnimationWeight(name,1);};THREE.MorphBlendMesh.prototype=Object.create(THREE.Mesh.prototype);THREE.MorphBlendMesh.prototype.constructor=THREE.MorphBlendMesh;THREE.MorphBlendMesh.prototype.createAnimation=function(name,start,end,fps){var animation={start:start,end:end,length:end-start+1,fps:fps,duration:(end-start)/fps,lastFrame:0,currentFrame:0,active:false,time:0,direction:1,weight:1,directionBackwards:false,mirroredLoop:false};this.animationsMap[name]=animation;this.animationsList.push(animation);};THREE.MorphBlendMesh.prototype.autoCreateAnimations=function(fps){var pattern=/([a-z]+)_?(\d+)/i;var firstAnimation,frameRanges={};var geometry=this.geometry;for(var i=0,il=geometry.morphTargets.length;i<il;i++){var morph=geometry.morphTargets[i];var chunks=morph.name.match(pattern);if(chunks&&chunks.length>1){var name=chunks[1];if(!frameRanges[name])frameRanges[name]={start:Infinity,end:-Infinity};var range=frameRanges[name];if(i<range.start)range.start=i;if(i>range.end)range.end=i;if(!firstAnimation)firstAnimation=name;}}for(var name in frameRanges){var range=frameRanges[name];this.createAnimation(name,range.start,range.end,fps);}this.firstAnimation=firstAnimation;};THREE.MorphBlendMesh.prototype.setAnimationDirectionForward=function(name){var animation=this.animationsMap[name];if(animation){animation.direction=1;animation.directionBackwards=false;}};THREE.MorphBlendMesh.prototype.setAnimationDirectionBackward=function(name){var animation=this.animationsMap[name];if(animation){animation.direction=-1;animation.directionBackwards=true;}};THREE.MorphBlendMesh.prototype.setAnimationFPS=function(name,fps){var animation=this.animationsMap[name];if(animation){animation.fps=fps;animation.duration=(animation.end-animation.start)/animation.fps;}};THREE.MorphBlendMesh.prototype.setAnimationDuration=function(name,duration){var animation=this.animationsMap[name];if(animation){animation.duration=duration;animation.fps=(animation.end-animation.start)/animation.duration;}};THREE.MorphBlendMesh.prototype.setAnimationWeight=function(name,weight){var animation=this.animationsMap[name];if(animation){animation.weight=weight;}};THREE.MorphBlendMesh.prototype.setAnimationTime=function(name,time){var animation=this.animationsMap[name];if(animation){animation.time=time;}};THREE.MorphBlendMesh.prototype.getAnimationTime=function(name){var time=0;var animation=this.animationsMap[name];if(animation){time=animation.time;}return time;};THREE.MorphBlendMesh.prototype.getAnimationDuration=function(name){var duration=-1;var animation=this.animationsMap[name];if(animation){duration=animation.duration;}return duration;};THREE.MorphBlendMesh.prototype.playAnimation=function(name){var animation=this.animationsMap[name];if(animation){animation.time=0;animation.active=true;}else{console.warn("THREE.MorphBlendMesh: animation["+name+"] undefined in .playAnimation()");}};THREE.MorphBlendMesh.prototype.stopAnimation=function(name){var animation=this.animationsMap[name];if(animation){animation.active=false;}};THREE.MorphBlendMesh.prototype.update=function(delta){for(var i=0,il=this.animationsList.length;i<il;i++){var animation=this.animationsList[i];if(!animation.active)continue;var frameTime=animation.duration/animation.length;animation.time+=animation.direction*delta;if(animation.mirroredLoop){if(animation.time>animation.duration||animation.time<0){animation.direction*=-1;if(animation.time>animation.duration){animation.time=animation.duration;animation.directionBackwards=true;}if(animation.time<0){animation.time=0;animation.directionBackwards=false;}}}else{animation.time=animation.time%animation.duration;if(animation.time<0)animation.time+=animation.duration;}var keyframe=animation.start+THREE.Math.clamp(Math.floor(animation.time/frameTime),0,animation.length-1);var weight=animation.weight;if(keyframe!==animation.currentFrame){this.morphTargetInfluences[animation.lastFrame]=0;this.morphTargetInfluences[animation.currentFrame]=1*weight;this.morphTargetInfluences[keyframe]=0;animation.lastFrame=animation.currentFrame;animation.currentFrame=keyframe;}var mix=animation.time%frameTime/frameTime;if(animation.directionBackwards)mix=1-mix;if(animation.currentFrame!==animation.lastFrame){this.morphTargetInfluences[animation.currentFrame]=mix*weight;this.morphTargetInfluences[animation.lastFrame]=(1-mix)*weight;}else{this.morphTargetInfluences[animation.currentFrame]=weight;}}};
 
 /***/ },
-/* 2 */
+/* 3 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3357,158 +3507,7 @@
 	    value: true
 	});
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	var _three = __webpack_require__(1);
-
-	var _three2 = _interopRequireDefault(_three);
-
-	var _beat_show = __webpack_require__(4);
-
-	var _beat_show2 = _interopRequireDefault(_beat_show);
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-	var canvas2d = document.getElementById('canvas2d');
-
-	var nearestPowerOfTwo = function nearestPowerOfTwo(dim) {
-	    var power = 2;
-	    while (dim >>= 1) {
-	        power <<= 1;
-	    }return power;
-	};
-
-	var Renderer = function () {
-	    function Renderer(canvas, container, stream) {
-	        var _this = this;
-
-	        _classCallCheck(this, Renderer);
-
-	        this._container = container;
-	        this._stream = stream;
-	        this._clock = new _three2.default.Clock();
-	        this._last = 0;
-	        this._canvas2d = this._createCanvas(stream);
-	        this._ctx = this._canvas2d.getContext('2d');
-
-	        this._scene = new _three2.default.Scene();
-
-	        this._initRenderer(canvas);
-	        this._initCamera();
-	        this._initMaterials();
-	        this._initGeometry();
-
-	        window.addEventListener('resize', function () {
-	            return _this._onResize();
-	        }, false);
-
-	        setInterval(function () {
-	            _this._last = _this._clock.getElapsedTime();
-	        }, 1000);
-
-	        this._animate();
-	    }
-
-	    _createClass(Renderer, [{
-	        key: '_createCanvas',
-	        value: function _createCanvas(img) {
-	            var canvas = document.createElement('canvas');
-	            canvas.width = nearestPowerOfTwo(img.width);
-	            canvas.height = nearestPowerOfTwo(img.height);
-	            return canvas;
-	        }
-	    }, {
-	        key: '_initRenderer',
-	        value: function _initRenderer(canvas) {
-	            this._renderer = new _three2.default.WebGLRenderer({ canvas: canvas });
-	            this._renderer.setClearColor(0xff00ff);
-	            this._onResize();
-	        }
-	    }, {
-	        key: '_initCamera',
-	        value: function _initCamera() {
-	            this._camera = new _three2.default.OrthographicCamera(-1, 1, 1, -1, 1, 1000);
-	            this._camera.position.set(0, 0, 5);
-	            this._scene.add(this._camera);
-	        }
-	    }, {
-	        key: '_initMaterials',
-	        value: function _initMaterials() {
-	            this._map = new _three2.default.Texture(this._canvas2d);
-
-	            this._material = new _three2.default.ShaderMaterial(_beat_show2.default);
-	            this._material.uniforms.map.value = this._map;
-	            this._material.uniforms.map.needsUpdate = true;
-	        }
-	    }, {
-	        key: '_initGeometry',
-	        value: function _initGeometry() {
-	            // Poor mans webvr :)
-	            var geometry = new _three2.default.PlaneGeometry(1, 2);
-
-	            this._left = new _three2.default.Mesh(geometry, this._material);
-	            this._left.position.setX(-0.5);
-	            this._scene.add(this._left);
-
-	            this._right = new _three2.default.Mesh(geometry, this._material);
-	            this._right.position.setX(0.5);
-	            this._scene.add(this._right);
-	        }
-	    }, {
-	        key: '_onResize',
-	        value: function _onResize() {
-	            this._renderer.setSize(this._container.clientWidth, this._container.clientHeight);
-	        }
-	    }, {
-	        key: '_animate',
-	        value: function _animate() {
-	            var _this2 = this;
-
-	            var start = this._clock.getElapsedTime();
-	            var delta = this._clock.getDelta();
-
-	            requestAnimationFrame(function () {
-	                return _this2._animate();
-	            });
-
-	            // Update image
-	            this._ctx.drawImage(this._stream, 0, 0, this._canvas2d.width, this._canvas2d.height);
-	            this._map.needsUpdate = true;
-	            this._material.needsUpdate = true;
-
-	            var val = (1 - (start - this._last)) / 1;
-	            var progress = Math.min(Math.max(val, 0), 1);
-	            this._material.uniforms.progress.value = progress;
-	            this._material.uniforms.progress.needsUpdate = true;
-
-	            this._render();
-	        }
-	    }, {
-	        key: '_render',
-	        value: function _render() {
-	            this._renderer.render(this._scene, this._camera);
-	        }
-	    }]);
-
-	    return Renderer;
-	}();
-
-	exports.default = Renderer;
-
-/***/ },
-/* 3 */,
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _three = __webpack_require__(1);
+	var _three = __webpack_require__(2);
 
 	var _three2 = _interopRequireDefault(_three);
 
