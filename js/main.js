@@ -3363,15 +3363,22 @@
 
 	var _three2 = _interopRequireDefault(_three);
 
-	var _pulse_shader = __webpack_require__(3);
+	var _beat_show = __webpack_require__(4);
 
-	var _pulse_shader2 = _interopRequireDefault(_pulse_shader);
+	var _beat_show2 = _interopRequireDefault(_beat_show);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 	var canvas2d = document.getElementById('canvas2d');
+
+	var nearestPowerOfTwo = function nearestPowerOfTwo(dim) {
+	    var power = 2;
+	    while (dim >>= 1) {
+	        power <<= 1;
+	    }return power;
+	};
 
 	var Renderer = function () {
 	    function Renderer(canvas, container, stream) {
@@ -3408,8 +3415,8 @@
 	        key: '_createCanvas',
 	        value: function _createCanvas(img) {
 	            var canvas = document.createElement('canvas');
-	            canvas.width = 512;
-	            canvas.height = 512; //img.height
+	            canvas.width = nearestPowerOfTwo(img.width);
+	            canvas.height = nearestPowerOfTwo(img.height);
 	            return canvas;
 	        }
 	    }, {
@@ -3431,7 +3438,7 @@
 	        value: function _initMaterials() {
 	            this._map = new _three2.default.Texture(this._canvas2d);
 
-	            this._material = new _three2.default.ShaderMaterial(_pulse_shader2.default);
+	            this._material = new _three2.default.ShaderMaterial(_beat_show2.default);
 	            this._material.uniforms.map.value = this._map;
 	            this._material.uniforms.map.needsUpdate = true;
 	        }
@@ -3471,7 +3478,7 @@
 	            this._map.needsUpdate = true;
 	            this._material.needsUpdate = true;
 
-	            var val = (0.5 - (start - this._last)) / 0.5;
+	            var val = (1 - (start - this._last)) / 1;
 	            var progress = Math.min(Math.max(val, 0), 1);
 	            this._material.uniforms.progress.value = progress;
 	            this._material.uniforms.progress.needsUpdate = true;
@@ -3491,7 +3498,8 @@
 	exports.default = Renderer;
 
 /***/ },
-/* 3 */
+/* 3 */,
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3507,16 +3515,15 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	/**
-	 * 
+	 * Shows the world on each beat
 	 */
 	exports.default = {
 	    uniforms: {
 	        map: { type: 't', value: new _three2.default.Texture() },
-
 	        progress: { value: 0.0 }
 	    },
 	    vertexShader: '\n        varying vec2 vUv;\n        \n        void main() {\n            vUv = uv;\n            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n        }\n    ',
-	    fragmentShader: '\n        uniform sampler2D map;\n        uniform float progress;\n\n        varying vec2 vUv;\n        \n        const float radius = 0.5;\n        const float softness = 0.5;\n\n        void main() {\n            vec4 tex = texture2D(map, vUv);\n\n            // vignette\n            vec2 position = vUv - vec2(0.5);\n            float len = length(position);\n            float vignette = 1.0 - smoothstep(radius, radius - softness, len);\n            tex.rgb = mix(tex.rgb, vec3(1, 0, 0), progress * vignette);\n\n            gl_FragColor = vec4(tex.rgb, 1.0);\n        }\n    '
+	    fragmentShader: '\n        uniform sampler2D map;\n        uniform float progress;\n\n        varying vec2 vUv;\n        \n        const float radius = 0.0;\n        const float softness = 0.5;\n\n        void main() {\n            vec4 tex = texture2D(map, vUv);\n\n            // vignette\n            vec2 position = vUv - vec2(0.5);\n            float len = length(position);\n            float vignette = 1.0 - smoothstep(radius, radius - softness, len);\n            tex.rgb = mix(tex.rgb, vec3(0.0, 0.0, 0.0), (1.0 - progress) * vignette);\n\n            gl_FragColor = vec4(tex.rgb, 1.0);\n        }\n    '
 	};
 
 /***/ }

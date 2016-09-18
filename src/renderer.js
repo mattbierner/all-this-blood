@@ -1,7 +1,14 @@
 import THREE from 'three'
-import pulseShader from './shaders/pulse_shader'
+import pulseShader from './shaders/beat_show'
 
 const canvas2d = document.getElementById('canvas2d')
+
+const nearestPowerOfTwo = dim => {
+    let power = 2
+    while (dim >>= 1)
+        power <<= 1
+    return power
+}
 
 export default class Renderer {
     constructor(canvas, container, stream) {
@@ -30,8 +37,8 @@ export default class Renderer {
 
     _createCanvas(img) {
         const canvas = document.createElement('canvas')
-        canvas.width = 512
-        canvas.height = 512//img.height
+        canvas.width = nearestPowerOfTwo(img.width)
+        canvas.height = nearestPowerOfTwo(img.height)
         return canvas
     }
 
@@ -41,7 +48,7 @@ export default class Renderer {
         this._onResize()
     }
 
-    _initCamera(){
+    _initCamera() {
         this._camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 1000)
         this._camera.position.set(0, 0, 5)
         this._scene.add(this._camera)
@@ -58,7 +65,7 @@ export default class Renderer {
     _initGeometry() {
         // Poor mans webvr :)
         const geometry = new THREE.PlaneGeometry(1, 2);
-        
+
         this._left = new THREE.Mesh(geometry, this._material)
         this._left.position.setX(-0.5)
         this._scene.add(this._left)
@@ -68,7 +75,7 @@ export default class Renderer {
         this._scene.add(this._right)
     }
 
-    _onResize(){
+    _onResize() {
         this._renderer.setSize(this._container.clientWidth, this._container.clientHeight);
     }
 
@@ -83,14 +90,13 @@ export default class Renderer {
         this._map.needsUpdate = true
         this._material.needsUpdate = true
 
-        const val = (0.5 - (start - this._last)) / 0.5;
+        const val = (1 - (start - this._last)) / 1;
         const progress = Math.min(Math.max(val, 0), 1)
         this._material.uniforms.progress.value = progress
         this._material.uniforms.progress.needsUpdate = true
 
-
         this._render()
-   }
+    }
 
     _render() {
         this._renderer.render(this._scene, this._camera)

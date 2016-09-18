@@ -1,12 +1,11 @@
 import THREE from 'three';
 
 /**
- * 
+ * Draws a red vignette on each beat.
  */
 export default {
     uniforms: {
         map: { type: 't', value: new THREE.Texture() },
-
         progress: { value: 0.0 },
     },
     vertexShader: `
