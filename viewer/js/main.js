@@ -50,6 +50,10 @@
 
 	var _renderer2 = _interopRequireDefault(_renderer);
 
+	var _socket = __webpack_require__(4);
+
+	var _socket2 = _interopRequireDefault(_socket);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var img = new Image();
@@ -3523,6 +3527,17 @@
 	    },
 	    vertexShader: '\n        varying vec2 vUv;\n        \n        void main() {\n            vUv = uv;\n            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);\n        }\n    ',
 	    fragmentShader: '\n        uniform sampler2D map;\n        uniform float progress;\n\n        varying vec2 vUv;\n        \n        const float radius = 0.0;\n        const float softness = 0.5;\n\n        void main() {\n            vec4 tex = texture2D(map, vUv);\n\n            // vignette\n            vec2 position = vUv - vec2(0.5);\n            float len = length(position);\n            float vignette = 1.0 - smoothstep(radius, radius - softness, len);\n            tex.rgb = mix(tex.rgb, vec3(0.0, 0.0, 0.0), (1.0 - progress) * vignette);\n\n            gl_FragColor = vec4(tex.rgb, 1.0);\n        }\n    '
+	};
+
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	var ws = new WebSocket("ws://192.168.1.2:5678/");
+	ws.onmessage = function (event) {
+	    console.log(event);
 	};
 
 /***/ }

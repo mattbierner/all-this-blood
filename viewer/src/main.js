@@ -1,5 +1,5 @@
 import Renderer from './renderer'
-
+import socket from './socket'
 
 const img = new Image()
 img.crossOrigin = 'anonymous'
