@@ -54,16 +54,18 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	var renderer = new _renderer2.default(document.getElementById('canvas3d'), document.getElementById('main'));
+
 	var socket = (0, _socket.createSocket)(function (data) {
-	    console.log(data);
+	    renderer.pulse(data);
 	});
 
 	var img = new Image();
 	img.crossOrigin = 'anonymous';
 	img.onload = function () {
-	    new _renderer2.default(document.getElementById('canvas3d'), document.getElementById('main'), img);
+	    renderer.setImage(img);
+	    renderer.animate();
 	};
-
 	img.src = 'http://192.168.1.6:8080';
 
 /***/ },
@@ -100,37 +102,42 @@
 	};
 
 	var Renderer = function () {
-	    function Renderer(canvas, container, stream) {
+	    function Renderer(canvas, container) {
 	        var _this = this;
 
 	        _classCallCheck(this, Renderer);
 
 	        this._container = container;
-	        this._stream = stream;
 	        this._clock = new _three2.default.Clock();
-	        this._last = 0;
-	        this._canvas2d = this._createCanvas(stream);
-	        this._ctx = this._canvas2d.getContext('2d');
+	        this._lastMs = 0;
+	        this._bpm = 60;
 
 	        this._scene = new _three2.default.Scene();
 
 	        this._initRenderer(canvas);
 	        this._initCamera();
-	        this._initMaterials();
-	        this._initGeometry();
 
 	        window.addEventListener('resize', function () {
 	            return _this._onResize();
 	        }, false);
-
-	        setInterval(function () {
-	            _this._last = _this._clock.getElapsedTime();
-	        }, 1000);
-
-	        this._animate();
 	    }
 
 	    _createClass(Renderer, [{
+	        key: 'pulse',
+	        value: function pulse(data) {
+	            this._lastMs = this._clock.getElapsedTime() * 1000;
+	            this._bpm = data.bpm;
+	        }
+	    }, {
+	        key: 'setImage',
+	        value: function setImage(img) {
+	            this._stream = img;
+	            this._canvas2d = this._createCanvas(img);
+	            this._ctx = this._canvas2d.getContext('2d');
+	            this._initMaterials();
+	            this._initGeometry();
+	        }
+	    }, {
 	        key: '_createCanvas',
 	        value: function _createCanvas(img) {
 	            var canvas = document.createElement('canvas');
@@ -181,15 +188,15 @@
 	            this._renderer.setSize(this._container.clientWidth, this._container.clientHeight);
 	        }
 	    }, {
-	        key: '_animate',
-	        value: function _animate() {
+	        key: 'animate',
+	        value: function animate() {
 	            var _this2 = this;
 
-	            var start = this._clock.getElapsedTime();
-	            var delta = this._clock.getDelta();
+	            var startMs = this._clock.getElapsedTime() * 1000;
+	            var deltaMs = this._clock.getDelta() * 1000;
 
 	            requestAnimationFrame(function () {
-	                return _this2._animate();
+	                return _this2.animate();
 	            });
 
 	            // Update image
@@ -197,7 +204,8 @@
 	            this._map.needsUpdate = true;
 	            this._material.needsUpdate = true;
 
-	            var val = (1 - (start - this._last)) / 1;
+	            var msBetweenBeats = 1 / this._bpm * 60.0 * 1000;
+	            var val = 1 - (startMs - this._lastMs) / msBetweenBeats;
 	            var progress = Math.min(Math.max(val, 0), 1);
 	            this._material.uniforms.progress.value = progress;
 	            this._material.uniforms.progress.needsUpdate = true;
@@ -3540,10 +3548,13 @@
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
+	/**
+	 * 
+	 */
 	var createSocket = exports.createSocket = function createSocket(handler) {
 	    var ws = new WebSocket("ws://192.168.1.2:5678/");
 	    ws.onmessage = function (event) {
-	        handler(event.data);
+	        handler(JSON.parse(event.data));
 	    };
 	    return ws;
 	};

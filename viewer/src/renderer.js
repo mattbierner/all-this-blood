@@ -11,28 +11,31 @@ const nearestPowerOfTwo = dim => {
 }
 
 export default class Renderer {
-    constructor(canvas, container, stream) {
+    constructor(canvas, container) {
         this._container = container
-        this._stream = stream
         this._clock = new THREE.Clock()
-        this._last = 0
-        this._canvas2d = this._createCanvas(stream)
-        this._ctx = this._canvas2d.getContext('2d')
+        this._lastMs = 0
+        this._bpm = 60
 
         this._scene = new THREE.Scene()
 
         this._initRenderer(canvas)
         this._initCamera()
-        this._initMaterials()
-        this._initGeometry()
 
         window.addEventListener('resize', () => this._onResize(), false)
+    }
 
-        setInterval(() => {
-            this._last = this._clock.getElapsedTime()
-        }, 1000)
+    pulse(data) {
+        this._lastMs = this._clock.getElapsedTime() * 1000
+        this._bpm = data.bpm
+    }
 
-        this._animate()
+    setImage(img) {
+        this._stream = img
+        this._canvas2d = this._createCanvas(img)
+        this._ctx = this._canvas2d.getContext('2d')
+        this._initMaterials()
+        this._initGeometry()
     }
 
     _createCanvas(img) {
@@ -79,18 +82,19 @@ export default class Renderer {
         this._renderer.setSize(this._container.clientWidth, this._container.clientHeight);
     }
 
-    _animate() {
-        const start = this._clock.getElapsedTime()
-        const delta = this._clock.getDelta()
+    animate() {
+        const startMs = this._clock.getElapsedTime() * 1000
+        const deltaMs = this._clock.getDelta() * 1000
 
-        requestAnimationFrame(() => this._animate())
+        requestAnimationFrame(() => this.animate())
 
         // Update image
         this._ctx.drawImage(this._stream, 0, 0, this._canvas2d.width, this._canvas2d.height)
         this._map.needsUpdate = true
         this._material.needsUpdate = true
 
-        const val = (1 - (start - this._last)) / 1;
+        const msBetweenBeats = 1 / this._bpm * 60.0 * 1000
+        const val = 1 - ((startMs - this._lastMs) / msBetweenBeats);
         const progress = Math.min(Math.max(val, 0), 1)
         this._material.uniforms.progress.value = progress
         this._material.uniforms.progress.needsUpdate = true
