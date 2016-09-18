@@ -52,9 +52,11 @@
 
 	var _socket = __webpack_require__(4);
 
-	var _socket2 = _interopRequireDefault(_socket);
-
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var socket = (0, _socket.createSocket)(function (data) {
+	    console.log(data);
+	});
 
 	var img = new Image();
 	img.crossOrigin = 'anonymous';
@@ -3535,9 +3537,15 @@
 
 	"use strict";
 
-	var ws = new WebSocket("ws://192.168.1.2:5678/");
-	ws.onmessage = function (event) {
-	    console.log(event);
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	var createSocket = exports.createSocket = function createSocket(handler) {
+	    var ws = new WebSocket("ws://192.168.1.2:5678/");
+	    ws.onmessage = function (event) {
+	        handler(event.data);
+	    };
+	    return ws;
 	};
 
 /***/ }

@@ -1,5 +1,9 @@
 import Renderer from './renderer'
-import socket from './socket'
+import {createSocket} from './socket'
+
+const socket = createSocket((data) => {
+    console.log(data)
+})
 
 const img = new Image()
 img.crossOrigin = 'anonymous'

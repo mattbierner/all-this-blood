@@ -19,6 +19,10 @@ import netifaces
 import RPi.GPIO as GPIO
 from datetime import datetime
 
+EPOCH = datetime.utcfromtimestamp(0)
+
+SAMPLE_INTERVAL = 0.002 # sec
+
 # GPIO config
 pulse_adc = 0
 SPICLK = 18
@@ -147,18 +151,23 @@ class IfIOnly():
 
         if should_return:
             return {
-                'bpm': self.BPM
+                'bpm': self.BPM,
+                'time': int((now - EPOCH).total_seconds() * 1000.0),
+                'delta': self.N
             }
 
-
 async def life(websocket, path):
+    """Websocket handler"""
     heart = IfIOnly()
-    while True:
-        result = heart.beat()
-        if result:
-            print("Beat {0}".format(result['bpm']))
-            await websocket.send(json.dumps(result))
-        await asyncio.sleep(0.002)
+    try:
+        while True:
+            result = heart.beat()
+            if result:
+                print("Beat {0}".format(result['bpm']))
+                await websocket.send(json.dumps(result))
+            await asyncio.sleep(SAMPLE_INTERVAL)
+    finally:
+        await websocket.close()
 
 
 if __name__ == '__main__':
@@ -169,7 +178,6 @@ if __name__ == '__main__':
     GPIO.setup(SPIMISO, GPIO.IN)
     GPIO.setup(SPICLK, GPIO.OUT)
     GPIO.setup(SPICS, GPIO.OUT)
-
 
     ip = netifaces.ifaddresses('eth0')[2][0]['addr']
 
