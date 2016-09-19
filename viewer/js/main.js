@@ -50,6 +50,10 @@
 
 	var _renderer2 = _interopRequireDefault(_renderer);
 
+	var _audio_context = __webpack_require__(7);
+
+	var audioCtx = _interopRequireWildcard(_audio_context);
+
 	var _socket = __webpack_require__(4);
 
 	var _config = __webpack_require__(5);
@@ -58,7 +62,23 @@
 
 	var _sound2 = _interopRequireDefault(_sound);
 
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var onIos = function onIos() {
+	    return (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream
+	    );
+	};
+
+	// The audio context must be created inside of a touch event on IOS
+	if (onIos) {
+	    document.body.addEventListener('touchstart', function () {
+	        return audio_context.init();
+	    }, false);
+	} else {
+	    audio_context.init();
+	}
 
 	var renderer = new _renderer2.default(document.getElementById('canvas3d'), document.getElementById('main'));
 
@@ -3641,6 +3661,40 @@
 	}();
 
 	exports.default = PulseSound;
+
+/***/ },
+/* 7 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	var r = void 0;
+	var ctx = void 0;
+
+	exports.default = new Promise(function (resolve, reject) {
+	    r = resolve;
+	});
+
+	/**
+	 * For IOS, audio context can only be created inside of a touch event.
+	 */
+
+	var init = exports.init = function init() {
+	    if (ctx) return ctx;
+
+	    ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+	    var oscillator = ctx.createOscillator();
+	    oscillator.frequency.value = 1;
+	    oscillator.connect(ctx.destination);
+	    oscillator.start(0);
+	    oscillator.stop(0);
+	    r(ctx);
+	    return ctx;
+	};
 
 /***/ }
 /******/ ]);

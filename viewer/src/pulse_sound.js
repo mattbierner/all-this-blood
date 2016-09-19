@@ -1,18 +1,22 @@
+import audio_context from './audio_context'
+
 /**
+ * "Ah, I see you have the machine that goes 'ping!'"
  * 
+ * Plays beep sound on heartbeat. 
  */
 export default class PulseSound {
     constructor() {
-        this._ctx = new (window.AudioContext || window.webkitAudioContext)()
-
         const req = new XMLHttpRequest()
         req.open('GET', './resources/beat.wav', true)
         req.responseType = 'arraybuffer'
-        req.onload = () => {
-            this._ctx.decodeAudioData(req.response, buffer => {
-                this._sound = buffer
-            }, console.error)
-        }
+        req.onload = () => 
+            audio_context.then(ctx => {
+                this._ctx = ctx
+                this._ctx.decodeAudioData(req.response, buffer => {
+                    this._sound = buffer
+                }, console.error)
+            })
         req.send()
     }
 
