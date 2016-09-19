@@ -34,6 +34,9 @@ export default class Renderer {
         this._stream = img
         this._canvas2d = this._createCanvas(img)
         this._ctx = this._canvas2d.getContext('2d')
+        this._ctx.translate(this._canvas2d.width, this._canvas2d.height);
+        this._ctx.scale(-1, -1);
+
         this._initMaterials()
         this._initGeometry()
     }

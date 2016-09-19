@@ -52,12 +52,21 @@
 
 	var _socket = __webpack_require__(4);
 
+	var _config = __webpack_require__(5);
+
+	var _sound = __webpack_require__(6);
+
+	var _sound2 = _interopRequireDefault(_sound);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var renderer = new _renderer2.default(document.getElementById('canvas3d'), document.getElementById('main'));
 
+	var sound = new _sound2.default();
+
 	var socket = (0, _socket.createSocket)(function (data) {
 	    renderer.pulse(data);
+	    sound.play();
 	});
 
 	var img = new Image();
@@ -66,7 +75,7 @@
 	    renderer.setImage(img);
 	    renderer.animate();
 	};
-	img.src = 'http://192.168.1.6:8080';
+	img.src = 'http://' + _config.ip + ':8080/?action=stream_0';
 
 /***/ },
 /* 1 */
@@ -134,6 +143,9 @@
 	            this._stream = img;
 	            this._canvas2d = this._createCanvas(img);
 	            this._ctx = this._canvas2d.getContext('2d');
+	            this._ctx.translate(this._canvas2d.width, this._canvas2d.height);
+	            this._ctx.scale(-1, -1);
+
 	            this._initMaterials();
 	            this._initGeometry();
 	        }
@@ -3541,23 +3553,94 @@
 
 /***/ },
 /* 4 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
+	exports.createSocket = undefined;
+
+	var _config = __webpack_require__(5);
+
 	/**
 	 * 
 	 */
 	var createSocket = exports.createSocket = function createSocket(handler) {
-	    var ws = new WebSocket("ws://192.168.1.2:5678/");
+	    var ws = new WebSocket('ws://' + _config.ip + ':5678/');
 	    ws.onmessage = function (event) {
 	        handler(JSON.parse(event.data));
 	    };
 	    return ws;
 	};
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	/**
+	 * Hostname of Raspberry Pi streaming server.
+	 */
+	var ip = exports.ip = window.location.href.indexOf('eth') ? '192.168.1.2' : '172.20.10.3';
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * 
+	 */
+
+	var PulseSound = function () {
+	    function PulseSound() {
+	        var _this = this;
+
+	        _classCallCheck(this, PulseSound);
+
+	        this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+	        var req = new XMLHttpRequest();
+	        req.open('GET', './resources/beat.wav', true);
+	        req.responseType = 'arraybuffer';
+	        req.onload = function () {
+	            _this._ctx.decodeAudioData(req.response, function (buffer) {
+	                _this._sound = buffer;
+	            }, console.error);
+	        };
+	        req.send();
+	    }
+
+	    _createClass(PulseSound, [{
+	        key: 'play',
+	        value: function play() {
+	            if (!this._sound) return;
+	            var source = this._ctx.createBufferSource();
+	            source.buffer = this._sound;
+	            source.connect(this._ctx.destination);
+	            source.start(0);
+	        }
+	    }]);
+
+	    return PulseSound;
+	}();
+
+	exports.default = PulseSound;
 
 /***/ }
 /******/ ]);

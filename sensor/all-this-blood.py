@@ -179,7 +179,9 @@ if __name__ == '__main__':
     GPIO.setup(SPICLK, GPIO.OUT)
     GPIO.setup(SPICS, GPIO.OUT)
 
-    ip = netifaces.ifaddresses('eth0')[2][0]['addr']
+    interface = sys.argv[1]
+
+    ip = netifaces.ifaddresses(interface)[2][0]['addr']
 
     loop = asyncio.get_event_loop()
     start_server = websockets.serve(life, ip, 5678)
