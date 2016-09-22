@@ -52,15 +52,15 @@
 
 	var _audio_context = __webpack_require__(7);
 
-	var audioCtx = _interopRequireWildcard(_audio_context);
+	var audio_context = _interopRequireWildcard(_audio_context);
 
-	var _socket = __webpack_require__(4);
+	var _pulse_client = __webpack_require__(8);
 
 	var _config = __webpack_require__(5);
 
-	var _sound = __webpack_require__(6);
+	var _pulse_sound = __webpack_require__(9);
 
-	var _sound2 = _interopRequireDefault(_sound);
+	var _pulse_sound2 = _interopRequireDefault(_pulse_sound);
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
@@ -72,7 +72,7 @@
 	};
 
 	// The audio context must be created inside of a touch event on IOS
-	if (onIos) {
+	if (onIos()) {
 	    document.body.addEventListener('touchstart', function () {
 	        return audio_context.init();
 	    }, false);
@@ -82,9 +82,9 @@
 
 	var renderer = new _renderer2.default(document.getElementById('canvas3d'), document.getElementById('main'));
 
-	var sound = new _sound2.default();
+	var sound = new _pulse_sound2.default();
 
-	var socket = (0, _socket.createSocket)(function (data) {
+	(0, _pulse_client.createPulseClient)(function (data) {
 	    renderer.pulse(data);
 	    sound.play();
 	});
@@ -120,6 +120,8 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	///vignette_red'//beat_show'
 
 	var canvas2d = document.getElementById('canvas2d');
 
@@ -3572,30 +3574,7 @@
 	};
 
 /***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-	exports.createSocket = undefined;
-
-	var _config = __webpack_require__(5);
-
-	/**
-	 * 
-	 */
-	var createSocket = exports.createSocket = function createSocket(handler) {
-	    var ws = new WebSocket('ws://' + _config.ip + ':5678/');
-	    ws.onmessage = function (event) {
-	        handler(JSON.parse(event.data));
-	    };
-	    return ws;
-	};
-
-/***/ },
+/* 4 */,
 /* 5 */
 /***/ function(module, exports) {
 
@@ -3607,62 +3586,15 @@
 	/**
 	 * Hostname of Raspberry Pi streaming server.
 	 */
-	var ip = exports.ip = window.location.href.indexOf('eth') ? '192.168.1.2' : '172.20.10.3';
-
-/***/ },
-/* 6 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	    value: true
-	});
-
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	var ip = exports.ip = window.location.href.indexOf('eth') >= 0 ? '192.168.1.2' : '172.20.10.3';
 
 	/**
-	 * 
+	 * Offset in ms of when heartbeat occured and when the pi detected it
 	 */
-
-	var PulseSound = function () {
-	    function PulseSound() {
-	        var _this = this;
-
-	        _classCallCheck(this, PulseSound);
-
-	        this._ctx = new (window.AudioContext || window.webkitAudioContext)();
-
-	        var req = new XMLHttpRequest();
-	        req.open('GET', './resources/beat.wav', true);
-	        req.responseType = 'arraybuffer';
-	        req.onload = function () {
-	            _this._ctx.decodeAudioData(req.response, function (buffer) {
-	                _this._sound = buffer;
-	            }, console.error);
-	        };
-	        req.send();
-	    }
-
-	    _createClass(PulseSound, [{
-	        key: 'play',
-	        value: function play() {
-	            if (!this._sound) return;
-	            var source = this._ctx.createBufferSource();
-	            source.buffer = this._sound;
-	            source.connect(this._ctx.destination);
-	            source.start(0);
-	        }
-	    }]);
-
-	    return PulseSound;
-	}();
-
-	exports.default = PulseSound;
+	var beatoffset = exports.beatoffset = -75;
 
 /***/ },
+/* 6 */,
 /* 7 */
 /***/ function(module, exports) {
 
@@ -3695,6 +3627,100 @@
 	    r(ctx);
 	    return ctx;
 	};
+
+/***/ },
+/* 8 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+	exports.createPulseClient = undefined;
+
+	var _config = __webpack_require__(5);
+
+	/**
+	 * 
+	 */
+	var createPulseClient = exports.createPulseClient = function createPulseClient(handler) {
+	    var ws = new WebSocket('ws://' + _config.ip + ':5678/');
+	    ws.onmessage = function (event) {
+	        var data = JSON.parse(event.data);
+
+	        var now = Date.now();
+	        var expectedNextbeat = 1 / data.bpm * 60 * 1000;
+	        var time = Math.max(expectedNextbeat - (now - data.time - _config.beatoffset), 0);
+
+	        setTimeout(function () {
+	            handler(data);
+	        }, time);
+	    };
+	    return ws;
+	};
+
+/***/ },
+/* 9 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	    value: true
+	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _audio_context = __webpack_require__(7);
+
+	var _audio_context2 = _interopRequireDefault(_audio_context);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * "Ah, I see you have the machine that goes 'ping!'"
+	 * 
+	 * Plays beep sound on heartbeat. 
+	 */
+
+	var PulseSound = function () {
+	    function PulseSound() {
+	        var _this = this;
+
+	        _classCallCheck(this, PulseSound);
+
+	        var req = new XMLHttpRequest();
+	        req.open('GET', './resources/beat.wav', true);
+	        req.responseType = 'arraybuffer';
+	        req.onload = function () {
+	            return _audio_context2.default.then(function (ctx) {
+	                _this._ctx = ctx;
+	                _this._ctx.decodeAudioData(req.response, function (buffer) {
+	                    _this._sound = buffer;
+	                }, console.error);
+	            });
+	        };
+	        req.send();
+	    }
+
+	    _createClass(PulseSound, [{
+	        key: 'play',
+	        value: function play() {
+	            if (!this._sound) return;
+	            var source = this._ctx.createBufferSource();
+	            source.buffer = this._sound;
+	            source.connect(this._ctx.destination);
+	            source.start(0);
+	        }
+	    }]);
+
+	    return PulseSound;
+	}();
+
+	exports.default = PulseSound;
 
 /***/ }
 /******/ ]);

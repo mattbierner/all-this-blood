@@ -1,5 +1,5 @@
 import THREE from 'three'
-import pulseShader from './shaders/beat_show'
+import pulseShader from './shaders/beat_show'///vignette_red'//beat_show'
 
 const canvas2d = document.getElementById('canvas2d')
 

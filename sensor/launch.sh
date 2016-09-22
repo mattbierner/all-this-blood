@@ -1,0 +1,2 @@
+./mjpg-streamer-experimental/mjpg_streamer -i "./mjpg-streamer-experimental/input_uvc.so --device=/dev/video0 -r 800x600" -o "./mjpg-streamer/mjpg-streamer-experimental/output_http.so -w ./www --port 8080 --nocommands" &
+sudo python3 main.py $@

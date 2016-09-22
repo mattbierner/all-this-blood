@@ -23,6 +23,8 @@ EPOCH = datetime.utcfromtimestamp(0)
 
 SAMPLE_INTERVAL = 0.002 # sec
 
+WEBSOCKET_PORT = 5678 
+
 # GPIO config
 pulse_adc = 0
 SPICLK = 18
@@ -179,13 +181,11 @@ if __name__ == '__main__':
     GPIO.setup(SPICLK, GPIO.OUT)
     GPIO.setup(SPICS, GPIO.OUT)
 
-    interface = sys.argv[1]
-
-    ip = netifaces.ifaddresses(interface)[2][0]['addr']
-
     loop = asyncio.get_event_loop()
-    start_server = websockets.serve(life, ip, 5678)
+    for interface in sys.argv[1:]:
+        ip = netifaces.ifaddresses(interface)[2][0]['addr']
+        start_server = websockets.serve(life, ip, WEBSOCKET_PORT)
+        loop.run_until_complete(start_server)
 
-    loop.run_until_complete(start_server)
     loop.run_forever()
 
