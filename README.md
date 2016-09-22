@@ -3,11 +3,10 @@
     <i>he said in his most goth voice</i>
 </div>
 
-This repo contains the source code used in [my project using a heartbeat sensor to modify my vision][post]. Check out the post for the idea behind this experiment and details on the rest of the setup.
-
+This repo contains the source code used in [my project using a heartbeat sensor to modify my vision][post]. Check out the post more details on the experiment
 
 ## Sensor
-This Python script collects heartbeat data from a [Pulse Sensor][pulse], sending heatbeat events over a websocket to the VR headset. It targets a Rasberry Pi that is using a MCP3008 analog to digital converter for the Pulse Sensor.
+This Python script collects heartbeat data from a [Pulse Sensor][pulse], sending heartbeat events over a websocket to the VR headset. It targets a Raspberry Pi that is using a MCP3008 analog to digital converter for the Pulse Sensor.
 
 The code requires Python 3.5+, and the [RPi.GPIO](https://learn.adafruit.com/raspberry-pi-analog-to-digital-converters/mcp3008) and [webksockets](https://pypi.python.org/pypi/websockets) libraries.
 
@@ -23,11 +22,19 @@ The script arguments specify which network devices to serve the websocket on.
 ## Site
 The website is designed to be run on an iPhone used with Google Cardboard. It takes the mjpeg stream from the camera and the heartbeat events, and uses WebGL to modify your vision in realtime.
 
-The site uses Jekyll and 
+The site uses webpack. To run it:
 
+```bash
+$ cd viewer
+$ npm install
 
-Edit the `viewer/src/config.js`
+# Edit `src/config.js` to provide the expected ip address of the Raspberry pi
+# and rebuild
+$ webpack
 
+# server up index.html somehow
+$ http-server index.html
+```
 
 ## Credits
 
