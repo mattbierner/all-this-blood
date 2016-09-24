@@ -47,4 +47,4 @@ $ http-server index.html
 
 [pulse]: http://pulsesensor.com/
 
-[post]: http://mattbierner.com/all-this-blood
+[post]: http://blog.mattbierner.com/all-this-blood
