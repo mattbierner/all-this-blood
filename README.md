@@ -41,7 +41,7 @@ $ http-server index.html
 * [Beartbeat ping sound](http://freesound.org/people/Benboncan/sounds/63832/)
 * [adafruit mcp3008 Python code](http://threejs.org/docs/index.html#Manual/Introduction/Creating_a_scene)
 * [Pulse sensor Arduino sample code](https://github.com/WorldFamousElectronics/PulseSensor_Amped_Arduino) 
-* [Three.js](http://freesound.org/people/Benboncan/sounds/63832/)
+* [Three.js](http://threejs.org)
 
 
 
